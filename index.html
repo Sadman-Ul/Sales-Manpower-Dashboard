@@ -1956,8 +1956,10 @@ async function saveSession() {
 async function loadSession() {
   return await loadDashboardData();
 }
-function clearSession(){
-  try{localStorage.removeItem(SESSION_KEY);}catch(err){}
+function clearSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch (err) {}
 }
 function init(){
   chartDefaults();
