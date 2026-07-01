@@ -1990,12 +1990,7 @@ try{
     switchTab('overview');
 
   });
-    normalizeEmployees();
-    applyFilterLogic();
-    buildFilterUI();
-    updateFooter();
-    renderValidation();
-    switchTab('overview');
+    
   }catch(err){
     console.error('Data load failed',err);
     $('#content').innerHTML='<div class="card" style="padding:40px;text-align:center">Click <b>Upload</b> to load a manpower file.</div>';
