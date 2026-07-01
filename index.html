@@ -1859,12 +1859,13 @@ function validateMapping(){
   const note=$('#mapNote');const btn=$('#applyMapping');
   if(missing.length){note.innerHTML=`<span style="color:var(--accent)">Required: ${missing.map(m=>m.label).join(', ')}</span>`;btn.disabled=true;btn.style.opacity=.5;}
   else{note.textContent='All required fields mapped.';btn.disabled=false;btn.style.opacity=1;}
-}async function applyMapping(){
+}
+ async function applyMapping(){
   const m={};$$('#mapGrid select').forEach(sel=>{if(sel.value)m[sel.dataset.mapkey]=sel.value;});
   S.mapping=m;
   normalizeEmployees();
   S.filters={};S.selectedEmp=null;
-  await saveSession();; // remember this dataset for next time the dashboard is opened
+  await saveSession(); // remember this dataset for next time the dashboard is opened
   setLastUpdated(Date.now());
   applyFilterLogic();
   buildFilterUI();
