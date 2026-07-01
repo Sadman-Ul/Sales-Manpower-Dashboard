@@ -1893,39 +1893,6 @@ function clearSession() {
     localStorage.removeItem(SESSION_KEY);
   } catch (err) {}
 }
-    // Save dashboard metadata
-    await saveDashboardData(payload);
-
-    // Save employee collection
-    await saveEmployees(S.employees);
-
-    // Local backup
-    localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
-
-    console.log("✅ Dashboard saved");
-  } catch (err) {
-    console.error("❌ saveSession failed:", err);
-    toast("Could not save dashboard");
-  }
-}
-
-    // Save dashboard metadata
-    await saveDashboardData(payload);
-
-    // Local backup
-    localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
-
-    // Save every employee
-    await saveEmployees(S.employees);
-
-    console.log("✅ Saved to Firestore");
-
-  } catch (err) {
-    console.error("❌ saveSession failed:", err);
-    toast("Could not save dashboard");
-  }
-}
-
     await saveDashboardData(payload);
 
     console.log("✅ Dashboard saved to Firestore");
