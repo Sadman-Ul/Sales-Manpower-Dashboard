@@ -1901,7 +1901,7 @@ async function saveSession() {
     localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
 
     // Save to Firestore
-    await saveDashboardData(payload);
+    await saveEmployees(S.employees);
 
     console.log("✅ Saved to Firestore");
 
