@@ -10,18 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
-
-<!-- Your Firebase configuration -->
-<script src="js/firebase.js"></script>
-
 <style>
 :root{
   --bg:#EEF1F8; --surface:#FFFFFF; --surface-2:#F3F6FC; --surface-3:#E9EEF8;
@@ -821,7 +810,8 @@ function makeChart(id,cfg){
   const grid=css('--border'); const tick=css('--muted');
   cfg.options=cfg.options||{};
   cfg.options.responsive=true; cfg.options.maintainAspectRatio=false;
-  if(cfg.type==='bar'){cfg.options.layout=cfg.options.layout||{};cfg.options.layout.padding=Object.assign({top:20,right:30},cfg.options.layout.padding||{});}
+  if(cfg.type==='
+bar'){cfg.options.layout=cfg.options.layout||{};cfg.options.layout.padding=Object.assign({top:20,right:30},cfg.options.layout.padding||{});}
   cfg.options.plugins=cfg.options.plugins||{};
   cfg.options.plugins.legend=cfg.options.plugins.legend||{labels:{color:tick,usePointStyle:true,pointStyle:'circle',padding:14,font:{size:11.5}}};
   cfg.options.plugins.tooltip=Object.assign({
@@ -1860,11 +1850,23 @@ function validateMapping(){
   if(missing.length){note.innerHTML=`<span style="color:var(--accent)">Required: ${missing.map(m=>m.label).join(', ')}</span>`;btn.disabled=true;btn.style.opacity=.5;}
   else{note.textContent='All required fields mapped.';btn.disabled=false;btn.style.opacity=1;}
 }
- async function applyMapping(){
+function applyMapping(){
   const m={};$$('#mapGrid select').forEach(sel=>{if(sel.value)m[sel.dataset.mapkey]=sel.value;});
   S.mapping=m;
   normalizeEmployees();
   S.filters={};S.selectedEmp=null;
+  saveSession(); // remember this dataset for next time the dashboard is opened
+  setLastUpdated(Date.now());
+  applyFilterLogic();
+  buildFilterUI();
+  closeModals();
+  switchTab('overview');
+  updateFooter();
+  renderValidation(); // updates nav badge
+  switchTab('overview');
+  toast(`Loaded ${fmt(S.employees.length)} employees`);
+}
+
 /* ----- Persist the last uploaded dataset so it survives page reloads ----- */
 const SESSION_KEY='dbl_manpower_session_v1';
 function setLastUpdated(ts){
@@ -1873,57 +1875,23 @@ function setLastUpdated(ts){
   const txt=d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
   el.innerHTML=`Last updated: <b>${txt}</b>`;
 }
-async function saveSession() {
-  console.log("🚀 saveSession() called");
-
-  try {
-    const payload = {
-      headers: S.headers,
-      rows: S.rawRows,
-      mapping: S.mapping,
-      source: S.sourceName,
-      savedAt: Date.now()
-    };
-    await saveDashboardData(payload);
-    await saveEmployees(S.employees);
-
-    localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
-
-    console.log("✅ Dashboard saved");
-  } catch (err) {
-    console.error("❌ saveSession failed:", err);
-    toast("Could not save dashboard");
-  }
+function saveSession(){
+  try{
+    const payload=JSON.stringify({headers:S.headers,rows:S.rawRows,mapping:S.mapping,source:S.sourceName,savedAt:Date.now()});
+    localStorage.setItem(SESSION_KEY,payload);
+  }catch(err){console.warn('Could not save session',err);toast('Saved data is too large to store in this browser');}
 }
-async function loadSession() {
-  return await loadDashboardData();
+function loadSession(){
+  try{
+    const raw=localStorage.getItem(SESSION_KEY);
+    if(!raw)return null;
+    const s=JSON.parse(raw);
+    if(!s||!Array.isArray(s.headers)||!Array.isArray(s.rows))return null;
+    return s;
+  }catch(err){return null;}
 }
-
-function clearSession() {
-  try {
-    localStorage.removeItem(SESSION_KEY);
-  } catch (err) {}
-}
-    // Keep local backup
-    localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
-
-    // Save to Firestore
-    await saveEmployees(S.employees);
-
-    console.log("✅ Saved to Firestore");
-
-  } catch (err) {
-    console.error("❌ saveSession failed:", err);
-    toast("Could not save dashboard");
-  }
-}
-async function loadSession() {
-  return await loadDashboardData();
-}
-function clearSession() {
-  try {
-    localStorage.removeItem(SESSION_KEY);
-  } catch (err) {}
+function clearSession(){
+  try{localStorage.removeItem(SESSION_KEY);}catch(err){}
 }
 function init(){
   chartDefaults();
@@ -1960,40 +1928,25 @@ function init(){
   document.addEventListener('click',e=>{const b=e.target.closest('[data-png]');if(b)exportPNG(b.dataset.png,b.dataset.title);});
 
   // Load the last uploaded dataset if one was saved; otherwise fall back to the built-in data.
-try{
-  // Listen for real-time Firestore updates
-  listenDashboardData((saved)=>{
-
+  try{
+    const saved=loadSession();
     if(saved){
       buildFromAOA([saved.headers,...saved.rows]);
-
-      S.mapping = (saved.mapping && Object.keys(saved.mapping).length)
-        ? saved.mapping
-        : autoMap(S.headers);
-
-      S.sourceName = saved.source || "Cloud Data";
+      S.mapping=(saved.mapping&&Object.keys(saved.mapping).length)?saved.mapping:autoMap(S.headers);
+      S.sourceName=saved.source||'Saved upload';
       setLastUpdated(saved.savedAt);
-
     }else{
-
-      const emb = JSON.parse($('#embeddedData').textContent);
-
+      const emb=JSON.parse($('#embeddedData').textContent);
       buildFromAOA([emb.columns,...emb.rows]);
-
-      S.mapping = autoMap(S.headers);
-
+      S.mapping=autoMap(S.headers);
       setLastUpdated(null);
     }
-
     normalizeEmployees();
     applyFilterLogic();
     buildFilterUI();
     updateFooter();
     renderValidation();
     switchTab('overview');
-
-  });
-    
   }catch(err){
     console.error('Data load failed',err);
     $('#content').innerHTML='<div class="card" style="padding:40px;text-align:center">Click <b>Upload</b> to load a manpower file.</div>';
