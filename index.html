@@ -1884,7 +1884,15 @@ async function saveSession() {
       source: S.sourceName,
       savedAt: Date.now()
     };
+async function loadSession() {
+  return await loadDashboardData();
+}
 
+function clearSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch (err) {}
+}
     // Save dashboard metadata
     await saveDashboardData(payload);
 
