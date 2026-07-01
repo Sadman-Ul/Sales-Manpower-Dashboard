@@ -1865,18 +1865,6 @@ function validateMapping(){
   S.mapping=m;
   normalizeEmployees();
   S.filters={};S.selectedEmp=null;
-  await saveSession(); // remember this dataset for next time the dashboard is opened
-  setLastUpdated(Date.now());
-  applyFilterLogic();
-  buildFilterUI();
-  closeModals();
-  switchTab('overview');
-  updateFooter();
-  renderValidation(); // updates nav badge
-  switchTab('overview');
-  toast(`Loaded ${fmt(S.employees.length)} employees`);
-}
-
 /* ----- Persist the last uploaded dataset so it survives page reloads ----- */
 const SESSION_KEY='dbl_manpower_session_v1';
 function setLastUpdated(ts){
