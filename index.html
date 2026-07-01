@@ -1884,6 +1884,17 @@ async function saveSession() {
       source: S.sourceName,
       savedAt: Date.now()
     };
+    await saveDashboardData(payload);
+    await saveEmployees(S.employees);
+
+    localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+
+    console.log("✅ Dashboard saved");
+  } catch (err) {
+    console.error("❌ saveSession failed:", err);
+    toast("Could not save dashboard");
+  }
+}
 async function loadSession() {
   return await loadDashboardData();
 }
@@ -1893,16 +1904,6 @@ function clearSession() {
     localStorage.removeItem(SESSION_KEY);
   } catch (err) {}
 }
-    await saveDashboardData(payload);
-
-    console.log("✅ Dashboard saved to Firestore");
-
-  } catch (err) {
-    console.error("❌ saveSession failed:", err);
-    toast("Could not save dashboard");
-  }
-}
-
     // Keep local backup
     localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
 
