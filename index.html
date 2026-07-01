@@ -1957,19 +1957,39 @@ function init(){
   document.addEventListener('click',e=>{const b=e.target.closest('[data-png]');if(b)exportPNG(b.dataset.png,b.dataset.title);});
 
   // Load the last uploaded dataset if one was saved; otherwise fall back to the built-in data.
-  try{
-    const saved=loadSession();
+try{
+  // Listen for real-time Firestore updates
+  listenDashboardData((saved)=>{
+
     if(saved){
       buildFromAOA([saved.headers,...saved.rows]);
-      S.mapping=(saved.mapping&&Object.keys(saved.mapping).length)?saved.mapping:autoMap(S.headers);
-      S.sourceName=saved.source||'Saved upload';
+
+      S.mapping = (saved.mapping && Object.keys(saved.mapping).length)
+        ? saved.mapping
+        : autoMap(S.headers);
+
+      S.sourceName = saved.source || "Cloud Data";
       setLastUpdated(saved.savedAt);
+
     }else{
-      const emb=JSON.parse($('#embeddedData').textContent);
+
+      const emb = JSON.parse($('#embeddedData').textContent);
+
       buildFromAOA([emb.columns,...emb.rows]);
-      S.mapping=autoMap(S.headers);
+
+      S.mapping = autoMap(S.headers);
+
       setLastUpdated(null);
     }
+
+    normalizeEmployees();
+    applyFilterLogic();
+    buildFilterUI();
+    updateFooter();
+    renderValidation();
+    switchTab('overview');
+
+  });
     normalizeEmployees();
     applyFilterLogic();
     buildFilterUI();
