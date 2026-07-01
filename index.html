@@ -1889,7 +1889,6 @@ async function saveSession() {
   console.log("🚀 saveSession() called");
 
   try {
-
     const payload = {
       headers: S.headers,
       rows: S.rawRows,
@@ -1897,6 +1896,22 @@ async function saveSession() {
       source: S.sourceName,
       savedAt: Date.now()
     };
+
+    // Save dashboard metadata
+    await saveDashboardData(payload);
+
+    // Save employee collection
+    await saveEmployees(S.employees);
+
+    // Local backup
+    localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+
+    console.log("✅ Dashboard saved");
+  } catch (err) {
+    console.error("❌ saveSession failed:", err);
+    toast("Could not save dashboard");
+  }
+}
 
     // Save dashboard metadata
     await saveDashboardData(payload);
