@@ -1897,6 +1897,16 @@ async function saveSession() {
       savedAt: Date.now()
     };
 
+    await saveDashboardData(payload);
+
+    console.log("✅ Dashboard saved to Firestore");
+
+  } catch (err) {
+    console.error("❌ saveSession failed:", err);
+    toast("Could not save dashboard");
+  }
+}
+
     // Keep local backup
     localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
 
@@ -1910,14 +1920,8 @@ async function saveSession() {
     toast("Could not save dashboard");
   }
 }
-function loadSession(){
-  try{
-    const raw=localStorage.getItem(SESSION_KEY);
-    if(!raw)return null;
-    const s=JSON.parse(raw);
-    if(!s||!Array.isArray(s.headers)||!Array.isArray(s.rows))return null;
-    return s;
-  }catch(err){return null;}
+async function loadSession() {
+  return await loadDashboardData();
 }
 function clearSession(){
   try{localStorage.removeItem(SESSION_KEY);}catch(err){}
