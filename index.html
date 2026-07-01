@@ -1885,11 +1885,30 @@ function setLastUpdated(ts){
   const txt=d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
   el.innerHTML=`Last updated: <b>${txt}</b>`;
 }
-function saveSession(){
-  try{
-    const payload=JSON.stringify({headers:S.headers,rows:S.rawRows,mapping:S.mapping,source:S.sourceName,savedAt:Date.now()});
-    localStorage.setItem(SESSION_KEY,payload);
-  }catch(err){console.warn('Could not save session',err);toast('Saved data is too large to store in this browser');}
+async function saveSession() {
+  console.log("🚀 saveSession() called");
+
+  try {
+    const payload = {
+      headers: S.headers,
+      rows: S.rawRows,
+      mapping: S.mapping,
+      source: S.sourceName,
+      savedAt: Date.now()
+    };
+
+    // Keep local backup
+    localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+
+    // Save to Firestore
+    await saveDashboardData(payload);
+
+    console.log("✅ Saved to Firestore");
+
+  } catch (err) {
+    console.error("❌ saveSession failed:", err);
+    toast("Could not save dashboard");
+  }
 }
 function loadSession(){
   try{
