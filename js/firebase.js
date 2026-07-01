@@ -37,3 +37,34 @@ function listenDashboardData(callback) {
   });
 }
 console.log("✅ Firebase connected successfully");
+// Save all employees to Firestore
+async function saveEmployees(employees) {
+  const batch = db.batch();
+
+  employees.forEach((emp, index) => {
+    const id = emp.empId && emp.empId !== "—"
+      ? emp.empId
+      : "EMP_" + index;
+
+    const ref = db.collection("employees").doc(id);
+
+    batch.set(ref, emp);
+  });
+
+  await batch.commit();
+
+  // Save metadata
+  await db.collection("dashboard").doc("metadata").set({
+    lastUpdated: Date.now(),
+    totalEmployees: employees.length
+  });
+
+  console.log("✅ Employees uploaded:", employees.length);
+}
+
+// Load all employees
+async function loadEmployees() {
+  const snap = await db.collection("employees").get();
+
+  return snap.docs.map(doc => doc.data());
+}
